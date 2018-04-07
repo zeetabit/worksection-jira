@@ -2,6 +2,7 @@
 
 namespace App;
 
+use App\Models\Jira\Project;
 use App\Models\Jira\Session;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -31,5 +32,10 @@ class User extends Authenticatable
     public function jiraSessions()
     {
         return $this->hasMany(Session::class, 'user_id', 'id');
+    }
+
+    public function jiraProjects()
+    {
+        return $this->hasMany(Project::class, 'user_id', 'id');
     }
 }
