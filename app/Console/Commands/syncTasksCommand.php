@@ -71,7 +71,7 @@ class syncTasksCommand extends Command
         try {
             $session_json = \jira()->session()->get();
         } catch (\Exception $exception) {
-            $cookie = \jira()->session()->login('login', 'pass');    //TODO: reauth usage
+            $cookie = \jira()->session()->login(config('atlassian.jira.auth.basic.username'), config('atlassian.jira.auth.basic.password'));    //TODO: reauth usage
             $session->cookie = json_decode($cookie);
             $session->save();
             cache()->put('jira_cookie', json_encode($session->cookie), 60*60*24*365);
