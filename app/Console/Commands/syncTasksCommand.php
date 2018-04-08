@@ -26,7 +26,7 @@ class syncTasksCommand extends Command
      *
      * @var string
      */
-    protected $description = 'Sync tasks';
+    protected $description = 'Sync JIRA tasks.';
 
     /**
      * Create a new command instance.
