@@ -16,8 +16,18 @@ Worksection and jira projects, task, worklog synhronization.
     
     `command:jira:syncTasks`
 
-2) Sync with WS the loaded from JIRA tasks
+2) Load from WS
 
-    This command will push to WorkSection projects, issues and worklogs.
+    This command for load add proj, tasks, timemoney's.
     
     `command:ws:syncTasks`
+
+3) Sync
+
+    This command will push the WS entities to WorkSection projects, issues and worklogs.
+    
+    For sync we have a `syncable` entity for each other JIRA projects to customized selected WS projects.
+    
+    PS: project could not be create in WS, only associating.
+    
+    `TODO`
