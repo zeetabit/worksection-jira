@@ -214,6 +214,24 @@ class WorkSectionService
         return $data['url'];
     }
 
+    public function updateTask($fields)
+    {
+        $response = $this->jsonGet('', 'update_task', $fields);
+
+        $data = json_decode($response->getBody(), true);
+
+        return $data;
+    }
+
+    public function completeTask($fields)
+    {
+        $response = $this->jsonGet('', 'complete_task', $fields);
+
+        $data = json_decode($response->getBody(), true);
+
+        return $data;
+    }
+
     public function createTimeMoney($fields)
     {
         $response = $this->jsonGet('', 'post_timemoney', $fields);

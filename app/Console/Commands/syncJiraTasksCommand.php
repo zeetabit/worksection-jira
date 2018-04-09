@@ -113,7 +113,7 @@ class syncJiraTasksCommand extends Command
      */
     public function loadIssues(User $user)
     {
-        $issues = \jira()->issues()->search(['jql' => "worklogDate >= 2018-03-01 AND worklogAuthor = currentUser()"]);
+        $issues = \jira()->issues()->search(['jql' => "worklogDate >= startOfMonth() AND worklogAuthor = currentUser()"]);
         // TODO: pagination
         //       array:5 [
         //     "expand" => "names,schema"
@@ -173,6 +173,7 @@ class syncJiraTasksCommand extends Command
                 $worklog['jira_issue_id'] = $worklog['issueId'];
                 $user = User::where('email', $worklog['author']['emailAddress'])->orWhere('second_email', $worklog['author']['emailAddress'])->first();
                 if (!$user) {
+                    // because user may be in not our team
                     // $user = User::create([
                     //     'name'  => $worklog['author']['name'],
                     //     'email' => $worklog['author']['emailAddress'],

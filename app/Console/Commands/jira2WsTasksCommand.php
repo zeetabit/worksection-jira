@@ -108,15 +108,17 @@ class jira2WsTasksCommand extends Command
         $syncCommand = $this->syncCommand;
 
         $taskName = $issue->summary;
+        $this->output->writeln('-- issue ' . $taskName);
         $wsTask = Task::where('name', $taskName)->first();
         if (!$wsTask) {
             $this->output->writeln('Task [' . $taskName . '] is not found, try to create them.');
             $wsService->createTask([
               'page'              => $wsProject->page,
               'email_user_from'   => $user->email,
-              'email_user_to'     => 'ANY',
+              'email_user_to'     => $user->email,
               'title'             => $taskName,
               'text'              => $issue->description,
+              'datestart'         => $worklog->started->format('d.m.Y')
             ]);
             $syncCommand->loadTasks($user, $wsProject);
         }
@@ -124,6 +126,19 @@ class jira2WsTasksCommand extends Command
         if (!$wsTask) {
             $this->output->writeln('Task [' . $taskName . '] is not found yet, WTF');
             return;
+        }
+
+        //check task is done
+        $resolution = $issue->resolution;
+        $status     = $issue->status;
+        if (isset($status['name']) && $status['name'] == 'Done' && $wsTask->status != 'done') {
+            $updDate = $issue->resolutiondate->format('d.m.Y');
+            $wsService->updateTask([
+               'page'            => $wsTask->page,
+               'dateend'         => $updDate,
+            ]);
+            $wsService->completeTask(['page' => $wsTask->page]);
+            $syncCommand->loadTasks($user, $wsProject);
         }
 
         $this->handleWorkLog($worklog, $wsTask, $wsProject);
