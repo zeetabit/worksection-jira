@@ -15,6 +15,8 @@ Worksection and jira projects, task, worklog synhronization.
     Command for load all projects, issues and WorkLog for last week:
     
     `command:jira:syncTasks`
+    
+    `TODO:` sync jira subtasks
 
 2) Load from WS
 
@@ -26,8 +28,10 @@ Worksection and jira projects, task, worklog synhronization.
 
     This command will push the WS entities to WorkSection projects, issues and worklogs.
     
-    For sync we have a `syncable` entity for each other JIRA projects to customized selected WS projects.
+    PS: project could be create in WS.
     
-    PS: project could not be create in WS, only associating.
+    `command:jira2ws`
     
-    `TODO`
+    `TODO:` handle subtask
+    
+4) `TODO:` Sync by user

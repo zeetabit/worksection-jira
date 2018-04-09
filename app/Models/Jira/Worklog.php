@@ -2,6 +2,7 @@
 
 namespace App\Models\Jira;
 
+use App\User;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 
@@ -21,6 +22,7 @@ class Worklog extends Model
         'timeSpentSeconds',
         'jira_id',
         'jira_issue_id',
+        'user_id',
     ];
 
     protected $casts = [
@@ -42,5 +44,26 @@ class Worklog extends Model
             }
         }
         parent::__construct($attributes);
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo|Issue|null
+     */
+    public function issue()
+    {
+        return $this->belongsTo(Issue::class, 'jira_issue_id', 'jira_id');
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    public function getGenTimeAttribute()
+    {
+        $minutes = $this->timeSpentSeconds / 60;    //minutes
+        $hours  = floor($minutes / 60);
+        $minutes = $minutes % 60;
+        return ($hours < 10 ? '0' . $hours : $hours) . ":" . ($minutes < 10 ? '0' . $minutes : $minutes);
     }
 }

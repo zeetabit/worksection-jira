@@ -67,19 +67,25 @@ class WorkSectionService
     }
 
     /**
-     * @param $page
-     * @param $action
+     * @param       $page
+     * @param       $action
+     * @param array $fields
      *
      * @return \Psr\Http\Message\ResponseInterface
      * @throws ApiException
      */
-    private function jsonPost($page, $action)
+    private function jsonPost($page, $action, $fields = [])
     {
-        $fields['hash'] = md5($page . $action . config('ws.token'));
+        $fields['hash'] = md5( (
+          isset($fields['page']) && strlen($fields['page']) > 0 ? $fields['page'] : $page
+          ) . $action . config('ws.token'));
+
+        if (strlen($action) > 0)
+            $fields['action'] = $action;
 
         $body = json_encode($fields, JSON_PRETTY_PRINT);
 
-        $response = $this->jsonPostToUrl($this->apiPoint . $page, $body);
+        $response = $this->jsonPostToUrl($this->apiPoint . '?action=' . $action . '&hash=' . $fields['hash'] . '&page=' . $fields['page'], $body);
 
         return $response;
     }
@@ -175,5 +181,45 @@ class WorkSectionService
         $timemoneys = json_decode($response->getBody(), true);
 
         return $timemoneys['data'];
+    }
+
+    /**
+     * @param        $email_user_from
+     * @param        $email_user_manager
+     * @param        $email_user_to
+     * @param        $members
+     * @param        $title
+     * @param string $text
+     *
+     * @param string $company
+     *
+     * @return  $page
+     * @throws ApiException
+     */
+    public function createProject($email_user_from, $email_user_manager, $email_user_to, $members, $title, $text = "", $company = "")
+    {
+        $response = $this->jsonGet('', 'post_project', compact('email_user_from', 'email_user_manager', 'email_user_to', 'members', 'title', 'text', 'company'));
+
+        $data = json_decode($response->getBody(), true);
+
+        return $data['url'];
+    }
+
+    public function createTask($fields)
+    {
+        $response = $this->jsonGet('', 'post_task', $fields);
+
+        $data = json_decode($response->getBody(), true);
+
+        return $data['url'];
+    }
+
+    public function createTimeMoney($fields)
+    {
+        $response = $this->jsonGet('', 'post_timemoney', $fields);
+
+        $data = json_decode($response->getBody(), true);
+
+        return $data['status'] == 'ok';
     }
 }

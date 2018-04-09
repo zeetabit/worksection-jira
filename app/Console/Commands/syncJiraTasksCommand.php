@@ -12,7 +12,7 @@ use Atlassian\JiraRest\Helpers\Projects;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
 
-class syncTasksCommand extends Command
+class syncJiraTasksCommand extends Command
 {
     /**
      * The name and signature of the console command.
@@ -113,7 +113,7 @@ class syncTasksCommand extends Command
      */
     public function loadIssues(User $user)
     {
-        $issues = \jira()->issues()->search(['jql' => "worklogDate >= startOfMonth() AND worklogAuthor = currentUser()"]);
+        $issues = \jira()->issues()->search(['jql' => "worklogDate >= 2018-03-01 AND worklogAuthor = currentUser()"]);
         // TODO: pagination
         //       array:5 [
         //     "expand" => "names,schema"
@@ -133,6 +133,9 @@ class syncTasksCommand extends Command
 
             foreach ($fromFields as $field)
                 $issue[$field] = $issue['fields'][$field];
+
+            if (strlen($issue['description']) == 0)
+                $issue['description'] = "";
 
             $obj = Issue::where([
               ['jira_id', '=', $issue['id']],
@@ -168,6 +171,16 @@ class syncTasksCommand extends Command
             foreach ($worklogs['worklogs'] as $worklog) {
                 $worklog['jira_id'] = $worklog['id'];
                 $worklog['jira_issue_id'] = $worklog['issueId'];
+                $user = User::where('email', $worklog['author']['emailAddress'])->orWhere('second_email', $worklog['author']['emailAddress'])->first();
+                if (!$user) {
+                    // $user = User::create([
+                    //     'name'  => $worklog['author']['name'],
+                    //     'email' => $worklog['author']['emailAddress'],
+                    //     'password'  => 'nopassword',
+                    // ]);
+                    continue;
+                }
+                $worklog['user_id'] = $user->id;
                 /** @var Worklog $workLogObj */
                 $workLogObj = Worklog::where([
                     ['jira_id', '=', $worklog['jira_id']],

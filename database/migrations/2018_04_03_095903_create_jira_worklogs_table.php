@@ -19,7 +19,7 @@ class CreateJiraWorklogsTable extends Migration
             $table->string('self');
             $table->json('author');
             $table->json('updateAuthor');
-            $table->string('comment');
+            $table->text('comment');
             $table->dateTime('created');
             $table->dateTime('updated');
             $table->dateTime('started');
@@ -31,6 +31,12 @@ class CreateJiraWorklogsTable extends Migration
             $table->foreign('jira_issue_id')
               ->references('jira_id')
               ->on('jira_issues')
+              ->onDelete('cascade');
+
+            $table->unsignedInteger('user_id');
+            $table->foreign('user_id')
+              ->references('id')
+              ->on('users')
               ->onDelete('cascade');
 
             $table->index(['jira_id', 'jira_issue_id']);

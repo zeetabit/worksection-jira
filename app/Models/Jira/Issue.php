@@ -81,8 +81,21 @@ class Issue extends Model
                     $attributes[$attrName] = date('Y-m-d H:i:s', 0);
                 else    //возможно ISO dateTime прилетело
                     $attributes[$attrName] = Carbon::parse($attributes[$attrName]);
+            } elseif ($attrType == 'datetime' && !isset($attributes[$attrName])) {
+                $attributes[$attrName] = date('Y-m-d H:i:s', 0);
+            } elseif ($attrType == 'array' && !isset($attributes[$attrName])) {
+                $attributes[$attrName] = "";
             }
         }
+
+        if (isset($attributes['description']) && $attributes['description'] == null)
+            $attributes['description'] = "nodescr";
+
         parent::__construct($attributes);
+    }
+
+    public function project()
+    {
+        return $this->belongsTo(Project::class, 'jira_project_id', 'jira_id');
     }
 }

@@ -23,7 +23,7 @@ class CreateJiraIssuesTable extends Migration
             $table->json('components');
             $table->unsignedInteger('timespent')->nullable();
             $table->unsignedInteger('timeoriginalestimate')->nullable();
-            $table->string('description');
+            $table->text('description');
 
             $table->unsignedInteger('jira_project_id');
             $table->foreign('jira_project_id')

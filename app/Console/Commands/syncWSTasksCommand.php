@@ -33,7 +33,7 @@ class syncWSTasksCommand extends Command
     protected $description = 'Sync WS tasks.';
 
     /** @var WorkSectionService $wsService */
-    protected $wsService;
+    public $wsService;
 
     /**
      * Create a new command instance.
@@ -212,7 +212,7 @@ class syncWSTasksCommand extends Command
         if (isset($data['tags'])) {
             foreach ($data['tags'] as $tagName) {
                 $tag = Tag::firstOrCreate(['name' => $tagName]);
-                $task->tags()->attach($tag->id);
+                $task->tags()->sync([$tag->id], false);
             }
         }
 
@@ -281,10 +281,6 @@ class syncWSTasksCommand extends Command
             if (!$ids)
                 continue;
 
-            /** @var TimeMoney $timeMoney */
-            $timeMoney = TimeMoney::firstOrNew(['id' => $timeMoneyArr['id']]);
-            $timeMoney->__construct($timeMoneyArr);
-
             while (sizeof($ids) > 0 && $ids[sizeof($ids)-1] == "")
                 array_pop($ids);
 
@@ -295,6 +291,10 @@ class syncWSTasksCommand extends Command
                 $this->output->writeln('Task ' . $task_id . ' is not Found. WTF');
                 continue;
             }
+
+            /** @var TimeMoney $timeMoney */
+            $timeMoney = TimeMoney::firstOrNew(['ws_id' => $timeMoneyArr['id'], 'ws_task_id' => $task->ws_id]);
+            $timeMoney->__construct($timeMoneyArr);
 
             $timeMoney->task()->associate($task);
             $timeMoney->save();

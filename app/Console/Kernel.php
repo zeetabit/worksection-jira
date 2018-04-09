@@ -2,7 +2,8 @@
 
 namespace App\Console;
 
-use App\Console\Commands\syncTasksCommand;
+use App\Console\Commands\syncJiraTasksCommand;
+use App\Console\Commands\syncWSTasksCommand;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
 
@@ -14,7 +15,8 @@ class Kernel extends ConsoleKernel
      * @var array
      */
     protected $commands = [
-        syncTasksCommand::class
+        syncJiraTasksCommand::class,
+        syncWSTasksCommand::class,
     ];
 
     /**
