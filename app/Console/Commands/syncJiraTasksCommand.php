@@ -11,6 +11,7 @@ use Atlassian\JiraRest\Facades\Jira;
 use Atlassian\JiraRest\Helpers\Projects;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Crypt;
 
 class syncJiraTasksCommand extends Command
 {
@@ -46,13 +47,16 @@ class syncJiraTasksCommand extends Command
      */
     public function handle()
     {
-        /** @var User $user */
-        $user = User::first();
-        $this->loadSession($user);
-        $this->loadProjects($user);
-        $issues = $this->loadIssues($user);
-        $this->loadWorkLog($user, $issues);
+        foreach (User::all() as $user) {
+            if (strlen($user->jira_password) == 0) continue;
 
+            /** @var User $user */
+            //$user = User::first();
+            $this->loadSession($user);
+            $this->loadProjects($user);
+            $issues = $this->loadIssues($user);
+            $this->loadWorkLog($user, $issues);
+        }
     }
 
     public function loadSession(User $user)
@@ -63,6 +67,10 @@ class syncJiraTasksCommand extends Command
         if (!$session) {
             $session = new Session(['user_id' => $user->id]);
             $this->output->writeln('Create jira session entity.');
+            $pass = Crypt::decryptString($user->jira_password);
+            $cookie = \jira()->session()->login($user->jira_user, $pass);
+            $session->cookie = json_decode($cookie);
+            $session->save();
             //throw new \Exception('The JIRA session is not present for this user ['.$user->id.']');
         }
 
@@ -71,7 +79,8 @@ class syncJiraTasksCommand extends Command
         try {
             $session_json = \jira()->session()->get();
         } catch (\Exception $exception) {
-            $cookie = \jira()->session()->login(config('atlassian.jira.auth.basic.username'), config('atlassian.jira.auth.basic.password'));    //TODO: reauth usage
+            $pass = Crypt::decryptString($user->jira_password);
+            $cookie = \jira()->session()->login($user->jira_user, $pass);
             $session->cookie = json_decode($cookie);
             $session->save();
             cache()->put('jira_cookie', json_encode($session->cookie), 60*60*24*365);
