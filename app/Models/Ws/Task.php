@@ -38,7 +38,7 @@ class Task extends Model
                 else
                     $attributes[$attrName] = Carbon::parse($attributes[$attrName]);
             } else {
-                $attributes[$attrName] = new Carbon(0);
+                $attributes[$attrName] = date('Y-m-d H:i:s', 0);
             }
         }
         parent::__construct($attributes);
