@@ -80,7 +80,12 @@ class syncJiraTasksCommand extends Command
             $session_json = \jira()->session()->get();
         } catch (\Exception $exception) {
             $pass = Crypt::decryptString($user->jira_password);
-            $cookie = \jira()->session()->login($user->jira_user, $pass);
+            $cookie = "";
+            try {
+                $cookie = \jira()->session()->login($user->jira_user, $pass);
+            } catch (\Exception $exception) {
+                $this->output->error($exception->getMessage());
+            }
             $session->cookie = json_decode($cookie);
             $session->save();
             cache()->put('jira_cookie', json_encode($session->cookie), 60*60*24*365);
