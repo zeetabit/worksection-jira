@@ -57,6 +57,8 @@ class syncJiraTasksCommand extends Command
             $startAt = 0; $issues = [];
             $this->loadIssues($user, $startAt, $issues);
             $this->loadWorkLog($user, $issues);
+            unset($startAt);
+            unset($issues);
         }
     }
 
