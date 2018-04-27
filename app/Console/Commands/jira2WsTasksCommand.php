@@ -151,15 +151,17 @@ class jira2WsTasksCommand extends Command
         //worklog
         $logDate = $worklog->started->format('Y-m-d');
 
-        if (!isset($wsTask->user_from['email'])) return;
-        $user = User::where('email', $wsTask->user_from['email'])->orWhere('second_email', $wsTask->user_from['email'])->first();
+        $user = User::where('email', $worklog->user->email)->orWhere('second_email', $worklog->user->email)->first();
         if (!$user) return;
 
         $wsTimeMoney = TimeMoney::where([
           ['date', '=', $logDate],
           ['ws_task_id', '=', $wsTask->ws_id],
-          ['user_id', '=', $worklog->user->id]
+          ['user_from', 'LIKE', '%' . $worklog->user->email . '%'],
+          ['time', '=', $worklog->gen_time],
         ])->first();
+
+        $this->output->writeln(' -- -- Handle Worklog2 ' . $worklog->jira_id . ', ' . $logDate .', task_id: ' . $wsTask->ws_id . ', uid:' . $user->id . ', time:' . $worklog->gen_time);
 
         if (!$wsTimeMoney) {
             $this->output->writeln('TimeMoney [' . $logDate . ', ' . $wsTask->ws_id . '] is not found, try to create them.');
@@ -175,7 +177,9 @@ class jira2WsTasksCommand extends Command
 
         $wsTimeMoney = TimeMoney::where([
           ['date', '=', $logDate],
-          ['ws_task_id', '=', $wsTask->ws_id]
+          ['ws_task_id', '=', $wsTask->ws_id],
+          ['user_from', 'LIKE', '%' . $worklog->user->email . '%'],
+          ['time', '=', $worklog->gen_time],
         ])->first();
         if (!$wsTimeMoney) {
             $this->output->writeln('TimeMoney [' . $logDate . ', ' . $wsTask->ws_id . '] is not found yet, WTF');
