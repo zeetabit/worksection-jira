@@ -127,7 +127,7 @@ class syncJiraTasksCommand extends Command
      */
     public function loadIssues(User $user)
     {
-        $issues = \jira()->issues()->search(['jql' => "worklogDate >= startOfMonth() AND worklogAuthor = currentUser()"]);
+        $issues = \jira()->issues()->search(['jql' => "worklogDate >= startOfMonth()"]);// AND worklogAuthor = currentUser()"]);
         // TODO: pagination
         //       array:5 [
         //     "expand" => "names,schema"
