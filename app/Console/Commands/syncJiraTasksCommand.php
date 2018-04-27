@@ -56,7 +56,8 @@ class syncJiraTasksCommand extends Command
             $this->loadProjects($user);
             $startAt = 0; $issues = [];
             $this->loadIssues($user, $startAt, $issues);
-            $this->loadWorkLog($user, $issues);
+            $startAt = 0;
+            $this->loadWorkLog($user, $issues,$startAt);
             unset($startAt);
             unset($issues);
         }
@@ -133,7 +134,7 @@ class syncJiraTasksCommand extends Command
     {
         $issues = \jira()->issues()->search([
             'jql' => "worklogDate >= startOfMonth()",
-            'startAt' => $startAt
+            'startAt' => $startAt,
         ]);// AND worklogAuthor = currentUser()"]);
         // TODO: pagination
         //       array:5 [
@@ -161,7 +162,7 @@ class syncJiraTasksCommand extends Command
 
             $obj = Issue::where([
               ['jira_id', '=', $issue['id']],
-              ['jira_project_id', '=', $issue['project']['id']]
+              ['jira_project_id', '=', $issue['project']['id']],
             ])->first();
 
             if (!$obj) $obj = new Issue(['jira_id' => $issue['id'], 'jira_project_id' => $issue['project']['id']]);
@@ -181,12 +182,15 @@ class syncJiraTasksCommand extends Command
     /**
      * @param User $user
      * @param Issue[] $issues
+     * @param int &$startAt
      */
-    public function loadWorkLog(User $user, $issues)
+    public function loadWorkLog(User $user, $issues, &$startAt)
     {
+        $worklogs = [];
+        /** @var Issue $issue */
         foreach ($issues as $issue)
         {
-            //TODO: pagination
+            $startAt = 0;
             /**
              * array:4 [
             "startAt" => 0
@@ -194,31 +198,45 @@ class syncJiraTasksCommand extends Command
             "total" => 6
             "worklogs" => array:6 [
              */
-            $worklogs = \jira()->issue($issue->jira_id . '/worklog')->get();
-            foreach ($worklogs['worklogs'] as $worklog) {
-                $worklog['jira_id'] = $worklog['id'];
-                $worklog['jira_issue_id'] = $worklog['issueId'];
-                $user = User::where('email', $worklog['author']['emailAddress'])->orWhere('second_email', $worklog['author']['emailAddress'])->first();
-                if (!$user) {
-                    // because user may be in not our team
-                    // $user = User::create([
-                    //     'name'  => $worklog['author']['name'],
-                    //     'email' => $worklog['author']['emailAddress'],
-                    //     'password'  => 'nopassword',
-                    // ]);
-                    continue;
+
+            // $worklogs = \jira()->issue($issue->jira_id . '/worklog')->get([
+            //     'startAt'   => $startAt,
+            // ]);
+
+            while (
+              ($worklogs = \jira()->issue($issue->jira_id . '/worklog')->get([
+                    'startAt' => $startAt,
+                    'expand'  => 'renderedFields',
+              ])) &&
+              isset($worklogs['worklogs']) && sizeof($worklogs['worklogs']) > 0
+            ) {
+                $this->output->writeln('loaded worklogs jira_task_id:' . $issue->jira_id . ', startAt: ' . $startAt . ' handle ' . sizeof($worklogs['worklogs']) . ' items...');
+                foreach ($worklogs['worklogs'] as $worklog) {
+                    $worklog['jira_id'] = $worklog['id'];
+                    $worklog['jira_issue_id'] = $worklog['issueId'];
+                    $user = User::where('email', $worklog['author']['emailAddress'])->orWhere('second_email', $worklog['author']['emailAddress'])->first();
+                    if (!$user) {
+                        // because user may be in not our team
+                        // $user = User::create([
+                        //     'name'  => $worklog['author']['name'],
+                        //     'email' => $worklog['author']['emailAddress'],
+                        //     'password'  => 'nopassword',
+                        // ]);
+                        continue;
+                    }
+                    $worklog['user_id'] = $user->id;
+                    /** @var Worklog $workLogObj */
+                    $workLogObj = Worklog::where([
+                      ['jira_id', '=', $worklog['jira_id']],
+                      ['jira_issue_id', '=', $worklog['jira_issue_id']],
+                    ])->first();
+
+                    if (!$workLogObj) $workLogObj = new Worklog(['jira_id' => $worklog['jira_id'], 'jira_issue_id' => $worklog['jira_issue_id']]);
+
+                    $workLogObj->__construct($worklog);
+                    $workLogObj->save();
                 }
-                $worklog['user_id'] = $user->id;
-                /** @var Worklog $workLogObj */
-                $workLogObj = Worklog::where([
-                    ['jira_id', '=', $worklog['jira_id']],
-                    ['jira_issue_id', '=', $worklog['jira_issue_id']]
-                ])->first();
-
-                if (!$workLogObj) $workLogObj = new Worklog(['jira_id' => $worklog['jira_id'], 'jira_issue_id' => $worklog['jira_issue_id']]);
-
-                $workLogObj->__construct($worklog);
-                $workLogObj->save();
+                break;
             }
         }
     }
