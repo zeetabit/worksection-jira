@@ -54,7 +54,8 @@ class syncJiraTasksCommand extends Command
             //$user = User::first();
             $this->loadSession($user);
             $this->loadProjects($user);
-            $issues = $this->loadIssues($user);
+            $startAt = 0; $issues = [];
+            $this->loadIssues($user, $startAt, $issues);
             $this->loadWorkLog($user, $issues);
         }
     }
@@ -118,16 +119,20 @@ class syncJiraTasksCommand extends Command
      * Load last updated issues.
      *
      * @param User $user
+     * @param int &$startAt
+     * @param array &$results
      *
-     * @return array
      * @throws \Atlassian\JiraRest\Exceptions\JiraClientException
      * @throws \Atlassian\JiraRest\Exceptions\JiraNotFoundException
      * @throws \Atlassian\JiraRest\Exceptions\JiraUnauthorizedException
      * @throws \TypeError
      */
-    public function loadIssues(User $user)
+    public function loadIssues(User $user, &$startAt, &$results)
     {
-        $issues = \jira()->issues()->search(['jql' => "worklogDate >= startOfMonth()"]);// AND worklogAuthor = currentUser()"]);
+        $issues = \jira()->issues()->search([
+            'jql' => "worklogDate >= startOfMonth()",
+            'startAt' => $startAt
+        ]);// AND worklogAuthor = currentUser()"]);
         // TODO: pagination
         //       array:5 [
         //     "expand" => "names,schema"
@@ -136,7 +141,8 @@ class syncJiraTasksCommand extends Command
         // "total" => 1
         // "issues" => array:1 [
 
-        $result = [];
+        //$results = [];
+        $this->output->writeln('load issues startAt: ' . $startAt . ', already loaded in this session ' . sizeof($results) . ' items.');
 
         foreach ($issues['issues'] as $issue) {
             $fromFields = ['issuetype', 'components', 'timespent', 'timeoriginalestimate', 'description', 'project',
@@ -160,9 +166,14 @@ class syncJiraTasksCommand extends Command
 
             $obj->__construct($issue);
             $obj->save();
-            $result[] = $obj;
+            $results[] = $obj;
         }
-        return $result;
+
+        if (isset($issues['issues']) && sizeof($issues['issues']) > 0) {
+            $startAt += $issues['maxResults'];
+            $this->loadIssues($user, $startAt, $results);
+        }
+        //return $results;
     }
 
     /**
