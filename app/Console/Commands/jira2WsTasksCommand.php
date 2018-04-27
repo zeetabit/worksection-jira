@@ -150,10 +150,17 @@ class jira2WsTasksCommand extends Command
         $syncCommand = $this->syncCommand;
         //worklog
         $logDate = $worklog->started->format('Y-m-d');
+
+        if (!isset($wsTask->user_from['email'])) return;
+        $user = User::where('email', $wsTask->user_from['email'])->orWhere('second_email', $wsTask->user_from['email'])->first();
+        if (!$user) return;
+
         $wsTimeMoney = TimeMoney::where([
           ['date', '=', $logDate],
-          ['ws_task_id', '=', $wsTask->ws_id]
+          ['ws_task_id', '=', $wsTask->ws_id],
+          ['user_id', '=', $worklog->user->id]
         ])->first();
+
         if (!$wsTimeMoney) {
             $this->output->writeln('TimeMoney [' . $logDate . ', ' . $wsTask->ws_id . '] is not found, try to create them.');
             $wsService->createTimeMoney([
