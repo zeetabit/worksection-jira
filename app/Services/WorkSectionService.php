@@ -207,7 +207,7 @@ class WorkSectionService
 
     public function createTask($fields)
     {
-        $fields['text'] = mb_substr($fields['text'], 0, 4000);
+        $fields['text'] = mb_substr($fields['text'], 0, 1000);
         $response = $this->jsonGet('', 'post_task', $fields);
 
         $data = json_decode($response->getBody(), true);
