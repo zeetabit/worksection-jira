@@ -136,7 +136,6 @@ class syncJiraTasksCommand extends Command
             'jql' => "worklogDate >= startOfMonth()",
             'startAt' => $startAt,
         ]);// AND worklogAuthor = currentUser()"]);
-        // TODO: pagination
         //       array:5 [
         //     "expand" => "names,schema"
         // "startAt" => 0
