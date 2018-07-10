@@ -180,7 +180,7 @@ class syncWSTasksCommand extends Command
         $result = [];
 
         foreach ($tasks as $task) {
-            $this->output->writeln('Parse Task page ' . $task['page']);
+            // $this->output->writeln('Parse Task page ' . $task['page']);
             $result[] = $this->parseTask($project, $task);
         }
 
@@ -197,7 +197,7 @@ class syncWSTasksCommand extends Command
         $id = $ids[sizeof($ids)-1];
 
         if (!is_numeric($id)) {
-            $this->output->writeln("Task with page ".$data['page'].' is not found.');
+            // $this->output->writeln("Task with page ".$data['page'].' is not found.');
             return null;
         }
 
@@ -217,7 +217,7 @@ class syncWSTasksCommand extends Command
         }
 
         if ($child) {
-            $this->output->writeln('Found child tasks ');
+            // $this->output->writeln('Found child tasks ');
             foreach ($child as $item) {
                 $this->parseTask($project, $item, $task);
             }
@@ -229,7 +229,7 @@ class syncWSTasksCommand extends Command
 
     public function loadTimeMoney(\App\Models\Ws\Project $project)
     {
-        $this->output->writeln('Let\'s find timeMoney for project ' . $project->page);
+        // $this->output->writeln('Let\'s find timeMoney for project ' . $project->page);
         $data = $this->wsService->getTimeMoney($project->page);
         /**
         {
@@ -276,7 +276,7 @@ class syncWSTasksCommand extends Command
         foreach ($data as $timeMoneyArr) {
             $timeMoneyArr['ws_id'] = $timeMoneyArr['id'];
             $timeMoneyArr['jsonTask']   = $timeMoneyArr['task'];
-            $this->output->writeln('ON ' . $project->page . ' IS found timeMoney ' . $timeMoneyArr['ws_id']);
+            // $this->output->writeln('ON ' . $project->page . ' IS found timeMoney ' . $timeMoneyArr['ws_id']);
             $ids = isset($timeMoneyArr['task']) && isset($timeMoneyArr['task']['page']) ? explode("/", $timeMoneyArr['task']['page']) : null;
             if (!$ids)
                 continue;
@@ -288,7 +288,7 @@ class syncWSTasksCommand extends Command
             $task = Task::where('ws_id', $task_id)->first();
 
             if (!$task) {
-                $this->output->writeln('Task ' . $task_id . ' is not Found. WTF');
+                // $this->output->writeln('Task ' . $task_id . ' is not Found. WTF');
                 continue;
             }
 
